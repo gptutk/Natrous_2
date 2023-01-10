@@ -1,3 +1,16 @@
+const AppError = require('../utils/appError');
+
+const handleValidationErrorDB = (err) => {
+  const errors = Object.values(err.errors).map((ele) => ele.message);
+  const message = `Ivalid Input Data . ${errors.join('. ')}`;
+  return new AppError(message, 400);
+};
+
+const customError = (err) => {
+  const message = `Invalid ${err.path} : ${err.value}`;
+  return new AppError(message, 400);
+};
+
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -18,7 +31,7 @@ const sendErrorProd = (err, res) => {
   //Programing or other unknown error: don't leak error details
   else {
     //1. Log Error
-    console.error('UNOPERATIONAL ERRO🎃', err);
+    console.error('UNOPERATIONAL ERROR🎃', err);
 
     //2 Send generic message
     res.status(500).json({
@@ -31,11 +44,17 @@ const sendErrorProd = (err, res) => {
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'err';
-  // console.log(process.env.NODE_ENV);
+  console.log(process.env.NODE_ENV, '🎃');
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
   } else if (process.env.NODE_ENV === 'production') {
-    sendErrorProd(err, res);
+    let error = err;
+    console.log(err.name, '🤨');
+    if (error.name === 'CastError') error = customError(error);
+    if (error.name === 'ValidationError')
+      error = handleValidationErrorDB(error);
+
+    sendErrorProd(error, res);
   }
 };
 // operational errors are the ones that we create to send as a response and hence can be used to send clients in the production phase.

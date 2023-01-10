@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+
+//whenever there is an unhandled Rejection, the process object will emit an object called an Unhandled Rejection, and we can work on  that by the following  method
+//Unhandled Rejections are promises which fail to execute and hence throw error.
+process.on('unhandledRejection', (err) => {
+  console.log(err.name, err.message);
+  console.log('UNHANDLED REJECTION!!! Shutting down...');
+  process.exit(1);
+});
+
+//All errors in synchronous code are unCaughtExceptions
+
+process.on('uncaughtException', (err) => {
+  console.log(err.name, err.message);
+  console.log('UNHANDLED Exception!!! Shutting down...');
+  process.exit(1);
+});
 //here we are ivoking config method to read the ENV from config.env file, which loads all the variable into process.env
 dotenv.config({ path: './config.env' });
 const app = require('./app');
@@ -41,6 +57,6 @@ console.log(app.get('env'));
 // console.log(app);
 console.log(process.env.PORT);
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`listenig to ${port}`);
 });
