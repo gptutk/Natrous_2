@@ -12,3 +12,5 @@ class AppError extends Error {
 }
 
 module.exports = AppError;
+
+// operational errors are the ones that we create to send as a response and hence can be used to send clients in the production phase.
