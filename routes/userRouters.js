@@ -1,11 +1,15 @@
 const express = require('express');
 const { type } = require('express/lib/response');
 const userControllers = require('../controllers/userController');
+const authController = require('../controllers/authController');
 const { route } = require('./tourRoutes');
 
 //images are not directly uploaded, we first take them in our system and then put a link to upload them in the database
 
 const router = express.Router();
+
+router.route('/signup').post(authController.signup);
+
 // console.log(typeof router);
 router
   .route('/')
