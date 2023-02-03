@@ -1,6 +1,9 @@
-exports.express = require('express');
 const multer = require('multer');
-// const AppError = require('./../utils/appError');
+const User = require('../models/userModel');
+const APIFeatures = require('../utils/apiFeatures');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
+exports.express = require('express');
 
 // const upload = multer({ dest: 'public/img/users' });
 // cb is for errors
@@ -46,12 +49,17 @@ exports.fileupload = upload.fields([
 //To test if uploaded file is an image
 //to test if particular uploaded files are of imgaes or csv etc
 
-exports.getAllUsers = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const users = await User.find();
+  console.log(users);
+  //SEND RESPONSE
+  res.status(200).json({
+    status: 'success',
+    data: {
+      users,
+    },
   });
-};
+});
 
 exports.getUser = (req, res) => {
   res.status(500).json({

@@ -2,6 +2,7 @@ const express = require('express');
 const req = require('express/lib/request');
 const res = require('express/lib/response');
 const tourController = require('../controllers/tourController');
+const authController = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -21,14 +22,18 @@ router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
 //Add it to the post handler stack
 router
   .route('/')
-  .get(tourController.getAllTours)
+  .get(authController.protect, tourController.getAllTours)
   .post(tourController.createTour);
 
 router
   .route('/:id/:b?')
   .get(tourController.getTour)
   .patch(tourController.updateTour)
-  .delete(tourController.deleteTour);
+  .delete(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.deleteTour
+  );
 
 // console.log(typeof router);
 
