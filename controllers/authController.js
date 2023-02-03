@@ -1,12 +1,112 @@
+const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
+// const { token } = require('morgan');
 const User = require('../models/userModel');
+const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
+const signToken = (inputId) =>
+  jwt.sign({ id: inputId }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
 exports.signup = catchAsync(async (req, res, next) => {
-  const newUser = await User.create(req.body);
+  const newUser = await User.create({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+    role: req.body.role,
+  });
+
+  const token = signToken(newUser._id);
   res.status(200).json({
     status: 'success',
+    token: token,
     data: {
       user: newUser,
     },
   });
 });
+
+exports.login = catchAsync(async (req, res, next) => {
+  //object destructing
+  const { email, password } = req.body;
+
+  //1) Check if email and passwrod exists
+  if (!email || !password)
+    return next(new AppError('Please provide a valid email and password', 400));
+
+  //2)check if user exists and password is correct
+
+  const user = await User.findOne({ email: email }).select('+password');
+
+  //here correctPassword is an instance method.
+  if (!user || !(await user.correctPassword(password, user.password)))
+    return next(new AppError('Invalid email or passsword', 404));
+
+  //3) if everything is ok, send token to client
+  res.status(200).json({
+    status: 'success',
+    token: signToken(user._id),
+  });
+});
+
+exports.protect = catchAsync(async (req, res, next) => {
+  // 1. Checking if token if present or not
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    const arr = req.headers.authorization.split(' ');
+    token = arr[1];
+  }
+  if (!token) {
+    return next(new AppError('You are not logged in !!', 401));
+  }
+  // 2. Verification of token
+
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  console.log(decoded);
+  //3. Check if the user still exists
+
+  const freshUser = await User.findById(decoded.id);
+  if (!freshUser) {
+    return new AppError(
+      'The user belonging to this token no longer exists',
+      401
+    );
+  }
+  //4. Check if user changed password after the token was issued
+  //not that necessary..- can be implemented later.
+
+  //GRANT ACCESS TO THE USER.
+  req.user = freshUser;
+  next();
+});
+
+exports.restrictTo =
+  (...roles) =>
+  (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError('Unauthorized to perform this action', 403));
+    }
+    next();
+  };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  //get the email from user
+  const user = await User.findOne({ email: req.body.email }).exec();
+
+  if (!user) {
+    return next(new AppError('user does not exist', 404));
+  }
+
+  //generate a reset token
+
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+  //send the token to the entered email
+});
+
+exports.resetPassword = (req, res, next) => {};

@@ -41,6 +41,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   //defing a property on request object to add the request time
   req.requestTime = new Date().toISOString();
+  console.log(req.headers);
   next();
 });
 
