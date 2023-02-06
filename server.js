@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 //whenever there is an unhandled Rejection, the process object will emit an object called an Unhandled Rejection, and we can work on  that by the following  method
 //Unhandled Rejections are promises which fail to execute and hence throw error.
 process.on('unhandledRejection', (err) => {
+  // console.trace('i am here');
+  console.log(err);
   console.log(err.name, err.message);
   console.log('UNHANDLED REJECTION!!! Shutting down...');
   process.exit(1);
