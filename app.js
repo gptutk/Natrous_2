@@ -2,6 +2,11 @@
 const fs = require('fs');
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 // const req = require('express/lib/request');
 // const res = require('express/lib/response');
@@ -13,28 +18,55 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRouters');
 const globalErrorHandler = require('./controllers/errorController');
 
-// const { application } = require('express');
-
 const app = express();
-// middleware
-//use method is used to add middleware to the middleware stack
-app.use(express.json());
-//Morgan here logs the every url requests that browers requests
 
+//1) GLOBAL MIDDLEWARES.
+
+//SET security HTTP headers.
+app.use(helmet());
+
+//Morgan here logs the every url requests that browers requests
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-//implementing user's resource
+//limiting ip requests, preventing DOS, Bruteforce.
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again after 1hr',
+});
+app.use('/api', limiter);
 
 //static file middleware
 app.use(express.static(`${__dirname}/public`));
 
+//Body parser, reading data from body to req.body.
+app.use(express.json({ limit: '10kb' }));
+
+// Data Sanitization against NoSQL query.
+app.use(mongoSanitize());
+
+//Data Sanitization against XSS attacks.
+app.use(xss());
+
+//Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
+);
+
 //middleware are gonna apply to every request if specified before respond obj
-//global middleware
 app.use((req, res, next) => {
   console.log('Hello from the middleware ');
-
   next();
 });
 

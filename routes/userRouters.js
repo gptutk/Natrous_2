@@ -12,11 +12,20 @@ router.route('/signup').post(authController.signup);
 router.route('/login').post(authController.login);
 
 router.post('/forgotPassword', authController.forgotPassword);
-router.post('/resetPassword', authController.resetPassword);
+router.patch('/resetPassword/:token', authController.resetPassword);
+
+router.patch('/updateMe', authController.protect, userControllers.updateMe);
+router.delete('/deleteMe', authController.protect, userControllers.deleteMe);
+
+router.patch(
+  '/updateMyPassword',
+  authController.protect,
+  authController.updatePassword
+);
 // console.log(typeof router);
 router
   .route('/')
-  .get(userControllers.getAllUsers)
+  .get(authController.protect, userControllers.getAllUsers)
   .post(userControllers.createUser);
 //upload middleware puts information about the file in the request object
 //the req.file specifies all the deatails related to the file

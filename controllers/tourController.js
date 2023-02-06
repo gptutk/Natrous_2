@@ -7,48 +7,40 @@ const AppError = require('../utils/appError');
 // eslint-disable-next-line arrow-body-style
 
 /* eslint-disable prefer-object-spread */
-exports.getAllTours = async (req, res) => {
-  try {
-    //Here our requested query is stored in req.query in the form of a object
-    console.log(req.query, '🙃');
-    console.log(req.params, '😺🎃');
-    console.log(req.query.fields);
-    console.log(typeof Tour, '🤨');
-    // console.log(Tour.find());
-    console.log(typeof Tour.find(), '😀');
+exports.getAllTours = catchAsync(async (req, res) => {
+  //Here our requested query is stored in req.query in the form of a object
+  console.log(req.query, '🙃');
+  console.log(req.params, '😺🎃');
+  console.log(req.query.fields);
+  console.log(typeof Tour, '🤨');
+  // console.log(Tour.find());
+  console.log(typeof Tour.find(), '😀');
 
-    //EXECUTE QUERY
-    const features = new APIFeatures(Tour.find(), req.query)
-      .filter()
-      .sort()
-      .limitFields()
-      .pagination();
-    //Final query execution, before this step, middleware query is executed
-    const tours = await features.query;
-    // console.log(tours);
-    console.log(typeof tours, '👍');
+  //EXECUTE QUERY
+  const features = new APIFeatures(Tour.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .pagination();
+  //Final query execution, before this step, middleware query is executed
+  const tours = await features.query;
+  // console.log(tours);
+  console.log(typeof tours, '👍');
 
-    // const tours = await Tour.find()
-    //   .where('duration')
-    //   .equals(5)
-    //   .where('difficulty')
-    //   .equals('easy');
-    //SEND RESPONSE
-    res.status(200).json({
-      status: 'success',
-      results: tours.length,
-      data: {
-        tours,
-      },
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(404).json({
-      status: 'fail',
-      message: err,
-    });
-  }
-};
+  // const tours = await Tour.find()
+  //   .where('duration')
+  //   .equals(5)
+  //   .where('difficulty')
+  //   .equals('easy');
+  //SEND RESPONSE
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      tours,
+    },
+  });
+});
 
 exports.getTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findById(req.params.id);

@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a password'],
     minlength: 8,
-    select: false,
+    // select: false,
   },
   passwordConfirm: {
     type: String,
@@ -41,8 +41,14 @@ const userSchema = new mongoose.Schema({
       message: 'Passwords are not the same',
     },
   },
+  passwordChangedAt: { type: Date },
   passwordResetToken: { type: String },
   passwordResetExpires: { type: Date },
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 //pre middleware on save
@@ -58,11 +64,23 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
 userSchema.methods.correctPassword = async function (inputPass, userPass) {
+  console.log({ inputPass }, { userPass });
   return await bcrypt.compare(inputPass, userPass);
 };
 
-userSchema.method.createPasswordResetToken = function () {
+userSchema.pre(/^find/, function (next) {
+  this.model.find({ active: { $ne: false } });
+  next();
+});
+
+userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
 
   this.passwordResetToken = crypto
@@ -73,6 +91,7 @@ userSchema.method.createPasswordResetToken = function () {
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 
   //we send just reset token not the encryptedone otherwise the encryption will be useless in saving it to the database
+  console.log({ resetToken });
   return resetToken;
 };
 
