@@ -15,13 +15,10 @@ const DB = process.env.DATABASE.replace(
 
 //This thing returns a promise
 mongoose
-  .connect(DB, {
+  .connect(
+    DB
     //.connect(process.env.DATABASE_LOCAL,) to connect to local database
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
-    useUnifiedTopology: true,
-  })
+  )
   .then(() => {
     // console.log(con);
     // console.log(con.connection);
@@ -37,9 +34,7 @@ mongoose
 //..the file in json format, so we use JSON.parse to convert it into..
 //..javascript object
 
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf-8')
-);
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
 
 // console.log(tours);
 

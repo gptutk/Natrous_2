@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const { default: slugify } = require('slugify');
-const bla = require('validator');
-const slug = require('slugify');
+const User = require('./userModel');
 //trim removes all the white spaces
 //here image is string as it will only have a name initially
 //here images are a array of string
@@ -14,7 +13,7 @@ const tourSchema = new mongoose.Schema(
       trim: true,
       maxlength: [40, 'A name can contain max 40 characters'],
       minLength: [10, 'A name must contain atleast 10 characters'],
-      validate: [bla.isAlpha, 'tour name must only contain characters'],
+      // validate: [bla.isAlpha, 'tour name must only contain characters'],
     },
     slug: {
       type: String,
@@ -93,6 +92,30 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   },
   {
     toJSON: { virtuals: true },
@@ -132,22 +155,26 @@ tourSchema.post('save', function (doc, next) {
 //This points at the current query, not at the document.
 //Secretive results.
 //because of find it becomes a query middleware, not doc middleware.
+
 tourSchema.pre(/^find/, function (next) {
   // tourSchema.pre('find', function (next)
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
   next();
 });
-// tourSchema.pre('findOne', function (next) {
-//   this.find({ secretTour: { $ne: true } });
-//   next();
-// });
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: 'id name email role',
+  });
+  next();
+});
 
 //this runs after the query has executed and has accces to the docs
 tourSchema.post(/^find/, function (docs, next) {
   //here this points to the current query
   console.log(`This query took ${Date.now() - this.start} miliseconds`);
-  // console.log(docs);
   next();
 });
 
@@ -167,3 +194,11 @@ module.exports = Tour;
 
 // we can run commands between events.
 //document, query, aggregate, model middleware.
+
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(
+//     async (ele) => await User.findById(ele)
+//   );
+//   this.guides = await Promise.all(guidesPromises);
+//   next();
+// });
