@@ -1,4 +1,5 @@
 /* eslint-disable no-shadow */
+const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const morgan = require('morgan');
@@ -7,6 +8,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 
 // const req = require('express/lib/request');
 // const res = require('express/lib/response');
@@ -18,13 +20,36 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRouters');
 const reviewRouter = require('./routes/reviewRoute');
 const globalErrorHandler = require('./controllers/errorController');
+const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
 
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+app.set('view options', { pretty: true });
 //1) GLOBAL MIDDLEWARES.
 
+//static file middleware
+app.use(express.static(path.join(__dirname, 'public')));
 //SET security HTTP headers.
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        'script-src': ["'self'", 'https://cdnjs.cloudflare.com/'],
+      },
+    },
+  })
+);
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept'
+  );
+  next();
+});
 
 //Morgan here logs the every url requests that browers requests
 if (process.env.NODE_ENV === 'development') {
@@ -39,11 +64,10 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-//static file middleware
-app.use(express.static(`${__dirname}/public`));
-
 //Body parser, reading data from body to req.body.
 app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
 
 // Data Sanitization against NoSQL query.
 app.use(mongoSanitize());
@@ -74,10 +98,12 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   //defing a property on request object to add the request time
   req.requestTime = new Date().toISOString();
-  console.log(req.headers);
+  console.log(req.cookies);
+  // console.log(req.headers);
   next();
 });
 
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);

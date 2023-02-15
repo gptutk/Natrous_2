@@ -22,6 +22,7 @@ const sendToken = (user, statusCode, res) => {
   };
 
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
   res.cookie('jwt', token, cookieOptions);
 
   res.status(statusCode).json({
@@ -62,11 +63,18 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Invalid email or passsword', 404));
 
   //3) if everything is ok, send token to client
+  sendToken(user, 200, res);
+});
+
+exports.logOut = (req, res, next) => {
+  res.cookie('jwt', 'loggged_out', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
   res.status(200).json({
     status: 'success',
-    token: signToken(user._id),
   });
-});
+};
 
 exports.protect = catchAsync(async (req, res, next) => {
   // 1. Checking if token if present or not
@@ -77,8 +85,10 @@ exports.protect = catchAsync(async (req, res, next) => {
   ) {
     const arr = req.headers.authorization.split(' ');
     token = arr[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
-  if (!token) {
+  if (!token || token === 'loggged_out') {
     return next(new AppError('You are not logged in !!', 401));
   }
   // 2. Verification of token
@@ -89,20 +99,47 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   const freshUser = await User.findById(decoded.id);
   if (!freshUser) {
-    return new AppError(
-      'The user belonging to this token no longer exists',
-      401
+    return next(
+      new AppError('The user belonging to this token no longer exists', 401)
     );
   }
   //4. Check if user changed password after the token was issued
   //not that necessary..- can be implemented later.
 
+  console.log('hello world');
   console.log(freshUser);
   //GRANT ACCESS TO THE USER.
   req.user = freshUser;
+  res.locals.user = freshUser;
   // req.user.password =
   next();
 });
+
+//Only for rendered pages.
+exports.isLoggedIn = async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      //1. Verify Token.
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      //2. Check if the user still exists
+      const freshUser = await User.findById(decoded.id);
+      if (!freshUser) {
+        return next();
+      }
+
+      //GRANT ACCESS TO THE USER.
+      res.locals.user = freshUser;
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
+  next();
+};
 
 exports.restrictTo =
   (...roles) =>
