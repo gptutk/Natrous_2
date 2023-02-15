@@ -15,34 +15,60 @@ const customError = (err) => {
 const handleJwtExpired = (err) =>
   new AppError('Token Expired, Login again', 401);
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
+const sendErrorDev = (err, req, res) => {
+  //API
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  }
+  //RENDERED WEBSITE
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong !',
+    msg: err.message,
   });
 };
 
-const sendErrorProd = (err, res) => {
+const sendErrorProd = (err, req, res) => {
   //Operational, trusted error : send message to the client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-    });
-  }
-  //Programing or other unknown error: don't leak error details
-  else {
+  if (req.originalUrl.startsWith('/api')) {
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    }
+    //Programing or other unknown error: don't leak error details
     //1. Log Error
     console.error('UNOPERATIONAL ERROR🎃', err);
 
     //2 Send generic message
-    res.status(500).json({
+    return res.status(500).json({
       status: err.status,
       message: err.message,
     });
   }
+  //RENDERED WEBSITE
+
+  if (err.isOperational) {
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong !',
+      msg: err.message,
+    });
+  }
+  //Programing or other unknown error: don't leak error details
+
+  //1. Log Error
+  console.error('UNOPERATIONAL ERROR🎃', err);
+
+  //2 Send generic message
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong !',
+    msg: 'Please try again later',
+  });
 };
 
 module.exports = (err, req, res, next) => {
@@ -50,7 +76,7 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'err';
   console.log(process.env.NODE_ENV, '🎃');
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = err;
     console.log(err.name, '🤨');
@@ -61,7 +87,7 @@ module.exports = (err, req, res, next) => {
     if (error.name === 'JsonWebTokenError') error = handleJWTError(error);
 
     if (error.name === 'TokenExpiredError') error = handleJwtExpired(error);
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 };
 // operational errors are the ones that we create to send as a response and hence can be used to send clients in the production phase.

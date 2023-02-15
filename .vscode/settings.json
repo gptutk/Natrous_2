@@ -1,4 +1,5 @@
 {
-    "ecl.targetCluster": {},
-    "ecl.launchConfiguration": "not found"
+  "ecl.targetCluster": {},
+  "ecl.launchConfiguration": "not found",
+  "compile-hero.disable-compile-files-on-did-save-code": true
 }
