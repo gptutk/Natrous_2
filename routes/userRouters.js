@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('multer');
 const { type } = require('express/lib/response');
 const userControllers = require('../controllers/userController');
 const authController = require('../controllers/authController');
@@ -18,14 +19,19 @@ router.get('/logout', authController.logOut);
 router.use(authController.protect);
 
 router.get('/me', userControllers.getMe, userControllers.getUser);
-router.patch('/updateMe', userControllers.updateMe);
+router.patch(
+  '/updateMe',
+  userControllers.uploadUserPhoto,
+  userControllers.resizeUserPhoto,
+  userControllers.updateMe
+);
 router.delete('/deleteMe', userControllers.deleteMe);
 router.patch(
   '/updateMyPassword',
   authController.protect,
   authController.updatePassword
 );
-router.patch('/updateMyPhoto', userControllers.updateUsrPhoto);
+// router.patch('/updateMyPhoto', userControllers.updateUsrPhoto);
 
 router.use(authController.restrictTo('admin'));
 router

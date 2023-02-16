@@ -21,6 +21,7 @@ const userRouter = require('./routes/userRouters');
 const reviewRouter = require('./routes/reviewRoute');
 const globalErrorHandler = require('./controllers/errorController');
 const viewRouter = require('./routes/viewRoutes');
+const bookingsRouter = require('./routes/bookingRoute');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use(
         'script-src': ["'self'", 'https://cdnjs.cloudflare.com/'],
       },
     },
+    // contentSecurityPolicy: false,
   })
 );
 app.use((req, res, next) => {
@@ -98,7 +100,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   //defing a property on request object to add the request time
   req.requestTime = new Date().toISOString();
-  console.log(req.cookies);
+  // console.log(req.cookies);
   // console.log(req.headers);
   next();
 });
@@ -107,6 +109,7 @@ app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingsRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
