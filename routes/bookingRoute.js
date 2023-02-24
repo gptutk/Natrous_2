@@ -1,5 +1,4 @@
 const Express = require('express');
-const { model } = require('mongoose');
 const bookingController = require('../controllers/bookingController');
 const authController = require('../controllers/authController');
 

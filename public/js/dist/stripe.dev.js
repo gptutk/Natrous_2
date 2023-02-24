@@ -15,7 +15,13 @@ var bookTour = function bookTour(tourId) {
             tourId: tourId
           });
           _context.next = 4;
-          return regeneratorRuntime.awrap(axios("http://127.0.0.1:8000/api/v1/bookings/checkout-session/".concat(tourId)));
+          return regeneratorRuntime.awrap(axios({
+            method: 'GET',
+            url: "http://127.0.0.1:8000/api/v1/bookings/checkout-session/".concat(tourId),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }));
 
         case 4:
           session = _context.sent;

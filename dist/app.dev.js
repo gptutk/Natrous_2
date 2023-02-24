@@ -58,13 +58,13 @@ app.set('view options', {
 app.use(express["static"](path.join(__dirname, 'public'))); //SET security HTTP headers.
 
 app.use(helmet({
-  contentSecurityPolicy: {
-    useDefaults: true,
-    directives: {
-      'script-src': ["'self'", 'https://cdnjs.cloudflare.com/']
-    }
-  } // contentSecurityPolicy: false,
-
+  // contentSecurityPolicy: {
+  //   useDefaults: true,
+  //   directives: {
+  //     'script-src': ["'self'", 'https://cdnjs.cloudflare.com/'],
+  //   },
+  // },
+  contentSecurityPolicy: false
 }));
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', req.headers.origin);

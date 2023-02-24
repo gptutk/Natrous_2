@@ -4,7 +4,6 @@ const fs = require('fs');
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
@@ -22,8 +21,10 @@ const reviewRouter = require('./routes/reviewRoute');
 const globalErrorHandler = require('./controllers/errorController');
 const viewRouter = require('./routes/viewRoutes');
 const bookingsRouter = require('./routes/bookingRoute');
+const { helmet, csp } = require('./utils/helmetConfig');
 
-const app = express();
+const app = express(helmet);
+csp(app);
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
@@ -33,17 +34,60 @@ app.set('view options', { pretty: true });
 //static file middleware
 app.use(express.static(path.join(__dirname, 'public')));
 //SET security HTTP headers.
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      useDefaults: true,
-      directives: {
-        'script-src': ["'self'", 'https://cdnjs.cloudflare.com/'],
-      },
-    },
-    // contentSecurityPolicy: false,
-  })
-);
+// const scriptSrcUrls = [
+//   'https://unpkg.com/',
+//   'https://tile.openstreetmap.org',
+//   'https://*.tiles.mapbox.com',
+//   'https://events.mapbox.com',
+//   'https://js.stripe.com',
+//   'https://m.stripe.network',
+//   'https://*.cloudflare.com',
+//   'https://api.mapbox.com',
+// ];
+// const styleSrcUrls = [
+//   'https://unpkg.com/',
+//   'https://*.tiles.mapbox.com',
+//   'https://tile.openstreetmap.org',
+//   'https://fonts.googleapis.com/',
+// ];
+// const connectSrcUrls = [
+//   'https://unpkg.com',
+//   'https://*.tiles.mapbox.com',
+//   'https://events.mapbox.com',
+//   'https://api.mapbox.com',
+//   'https://tile.openstreetmap.org',
+//   'https://*.stripe.com',
+//   'https://bundle.js:*',
+//   'ws://127.0.0.1:*/',
+// ];
+// const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+
+// app.use(
+//   helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'", 'data:', 'blob:', 'https:', 'ws:'],
+//       baseUri: ["'self'"],
+//       fontSrc: ["'self'", ...fontSrcUrls],
+//       scriptSrc: ["'self'", 'https:', 'http:', 'blob:', ...scriptSrcUrls],
+//       frameSrc: ["'self'", 'https://js.stripe.com'],
+//       objectSrc: ["'none'"],
+//       styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+//       workerSrc: ["'self'", 'blob:', 'https://m.stripe.network'],
+//       childSrc: ["'self'", 'blob:'],
+//       imgSrc: ["'self'", 'blob:', 'data:', 'https:'],
+//       formAction: ["'self'"],
+//       connectSrc: [
+//         "'self'",
+//         "'unsafe-inline'",
+//         'data:',
+//         'blob:',
+//         ...connectSrcUrls,
+//       ],
+//       upgradeInsecureRequests: [],
+//     },
+//   })
+// );
+
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header(

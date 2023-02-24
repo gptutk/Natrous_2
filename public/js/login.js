@@ -41,8 +41,9 @@ if (logOutTrig) {
 //LOGIN
 export const login = async (email, password) => {
   try {
+    console.log({ email }, { password });
     const res = await axios({
-      method: 'GET',
+      method: 'POST',
       url: 'http://127.0.0.1:8000/api/v1/users/login',
       withCredentials: true,
       data: {
@@ -57,6 +58,7 @@ export const login = async (email, password) => {
       }, 1500);
     }
   } catch (err) {
+    console.log(err.response.data.message, '👻');
     showAlert('error', err.response.data.message);
     // console.log(err.response.data);
   }
