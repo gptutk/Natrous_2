@@ -8,14 +8,29 @@ module.exports = class Email {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
-    this.from = `Utkarsh Gupta <${process.env.EMAIL_FROM}>`;
+    this.from = `${process.env.EMAIL_FROM}`;
   }
 
   //1. Define transporter.
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
       //SENDGRID
-      return 1;
+      return nodemailer.createTransport({
+        service: 'SendGrid',
+        auth: {
+          user: process.env.SENDGRID_USER,
+          pass: process.env.SENDGRID_PASSWORD,
+        },
+      });
+      // return nodemailer.createTestAccount({
+      // host: process.env.EMAIL_HOST,
+      // port: process.env.EMAIL_PORT,
+      // service: 'SendGrid',
+      //   auth: {
+      //     user: process.env.SENDGRID_USER,
+      //     pass: process.env.SENDGRID_PASSWORD,
+      //   },
+      // });
     }
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
@@ -51,6 +66,13 @@ module.exports = class Email {
   //3. send email
   async sendWelcome() {
     await this.send('welcome', 'Welcome to the Natrous Family ! ');
+  }
+
+  async sendPasswordReset() {
+    await this.send(
+      'passwordReset',
+      'Your password reset token (valid for 10 minutes)'
+    );
   }
 };
 

@@ -23,7 +23,7 @@ function () {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
-    this.from = "Utkarsh Gupta <".concat(process.env.EMAIL_FROM, ">");
+    this.from = "".concat(process.env.EMAIL_FROM);
   } //1. Define transporter.
 
 
@@ -32,7 +32,21 @@ function () {
     value: function newTransport() {
       if (process.env.NODE_ENV === 'production') {
         //SENDGRID
-        return 1;
+        return nodemailer.createTransport({
+          service: 'SendGrid',
+          auth: {
+            user: process.env.SENDGRID_USER,
+            pass: process.env.SENDGRID_PASSWORD
+          }
+        }); // return nodemailer.createTestAccount({
+        // host: process.env.EMAIL_HOST,
+        // port: process.env.EMAIL_PORT,
+        // service: 'SendGrid',
+        //   auth: {
+        //     user: process.env.SENDGRID_USER,
+        //     pass: process.env.SENDGRID_PASSWORD,
+        //   },
+        // });
       }
 
       return nodemailer.createTransport({
@@ -92,6 +106,23 @@ function () {
             case 2:
             case "end":
               return _context2.stop();
+          }
+        }
+      }, null, this);
+    }
+  }, {
+    key: "sendPasswordReset",
+    value: function sendPasswordReset() {
+      return regeneratorRuntime.async(function sendPasswordReset$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              _context3.next = 2;
+              return regeneratorRuntime.awrap(this.send('passwordReset', 'Your password reset token (valid for 10 minutes)'));
+
+            case 2:
+            case "end":
+              return _context3.stop();
           }
         }
       }, null, this);
