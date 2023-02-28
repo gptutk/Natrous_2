@@ -100,9 +100,7 @@ app.use(function (req, res, next) {
 });
 app.use(function (req, res, next) {
   //defing a property on request object to add the request time
-  req.requestTime = new Date().toISOString(); // console.log(req.cookies);
-  // console.log(req.headers);
-
+  req.requestTime = new Date().toISOString();
   next();
 });
 app.use('/', viewRouter);

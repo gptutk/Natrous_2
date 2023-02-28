@@ -25,12 +25,13 @@ block content
                             +navItem('#', 'Manage tours', 'map')
                             +navItem('#', 'Manage users', 'users')
                             +navItem('#', 'Manage reviews', 'star')
-                            li(class = `${active ? 'side-nav--active' :'' }`)
-                                button(type='submit' onclick=window.open('/img/reviews.csv'))
-                                    a(href=`#`)
-                                        svg
-                                            use(xlink:href=`/img/icons.svg#icon-briefcase`)
-                                        | Download_Reviews
+                            +navItem('#', 'Download reviews', 'briefcase')
+                            //- li(class = `${active ? 'side-nav--active' :'' }`)
+                            //-     button(type='submit' onclick=window.open('/img/reviews.csv'))
+                            //-         a(href=`#`)
+                            //-             svg
+                            //-                 use(xlink:href=`/img/icons.svg#icon-briefcase`)
+                            //-             | Download_Reviews
 
             .user-view__content
                 .user-view__form-container
