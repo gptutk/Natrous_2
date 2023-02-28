@@ -11,8 +11,6 @@ var morgan = require('morgan');
 
 var rateLimit = require('express-rate-limit');
 
-var helmet = require('helmet');
-
 var mongoSanitize = require('express-mongo-sanitize');
 
 var xss = require('xss-clean');
@@ -47,7 +45,12 @@ var viewRouter = require('./routes/viewRoutes');
 
 var bookingsRouter = require('./routes/bookingRoute');
 
-var app = express();
+var _require3 = require('./utils/helmetConfig'),
+    helmet = _require3.helmet,
+    csp = _require3.csp;
+
+var app = express(helmet);
+csp(app);
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view options', {
@@ -55,17 +58,7 @@ app.set('view options', {
 }); //1) GLOBAL MIDDLEWARES.
 //static file middleware
 
-app.use(express["static"](path.join(__dirname, 'public'))); //SET security HTTP headers.
-
-app.use(helmet({
-  // contentSecurityPolicy: {
-  //   useDefaults: true,
-  //   directives: {
-  //     'script-src': ["'self'", 'https://cdnjs.cloudflare.com/'],
-  //   },
-  // },
-  contentSecurityPolicy: false
-}));
+app.use(express["static"](path.join(__dirname, 'public')));
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');

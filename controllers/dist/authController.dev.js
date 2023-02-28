@@ -270,7 +270,7 @@ exports.restrictTo = function () {
 };
 
 exports.forgotPassword = catchAsync(function _callee5(req, res, next) {
-  var user, resetToken, resetURL, message;
+  var user, resetToken, resetURL;
   return regeneratorRuntime.async(function _callee5$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
@@ -299,41 +299,39 @@ exports.forgotPassword = catchAsync(function _callee5(req, res, next) {
           }));
 
         case 8:
-          //send the token to the entered email
+          _context5.prev = 8;
           resetURL = "".concat(req.protocol, "://").concat(req.get('host'), "/api/v1/users/resetPassword/").concat(resetToken);
-          message = "forgot your password ? submit a PATCH request with your new password and password confirm to : ".concat(resetURL, ". \n If you did not forgot your password please ignore this message");
-          _context5.prev = 10;
-          // await sendEmail({
-          //   email: user.email,
-          //   subject: 'Your password Reset token, Valid for 10 min',
-          //   message: message,
-          // });
+          _context5.next = 12;
+          return regeneratorRuntime.awrap(new Email(user, resetURL).sendPasswordReset());
+
+        case 12:
           res.status(200).json({
             status: 'success',
             message: 'token sent to email'
           });
-          _context5.next = 21;
+          _context5.next = 23;
           break;
 
-        case 14:
-          _context5.prev = 14;
-          _context5.t0 = _context5["catch"](10);
+        case 15:
+          _context5.prev = 15;
+          _context5.t0 = _context5["catch"](8);
           user.passwordResetExpires = undefined;
           user.passwordResetToken = undefined;
-          _context5.next = 20;
+          _context5.next = 21;
           return regeneratorRuntime.awrap(user.save({
             validateBeforeSave: false
           }));
 
-        case 20:
+        case 21:
+          console.log(_context5.t0);
           return _context5.abrupt("return", next(new AppError('failed to send email, please try again later', 500)));
 
-        case 21:
+        case 23:
         case "end":
           return _context5.stop();
       }
     }
-  }, null, null, [[10, 14]]);
+  }, null, null, [[8, 15]]);
 });
 exports.resetPassword = catchAsync(function _callee6(req, res, next) {
   var hashedToken, user;

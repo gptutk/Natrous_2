@@ -4,6 +4,8 @@ var stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 var Tour = require('../models/tourModel');
 
+var Booking = require('../models/bookingModel');
+
 var catchAsync = require('../utils/catchAsync');
 
 var AppError = require('../utils/appError');
@@ -25,7 +27,7 @@ exports.getCheckoutSession = catchAsync(function _callee(req, res, next) {
           return regeneratorRuntime.awrap(stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
-            success_url: "".concat(req.protocol, "://").concat(req.get('host'), "/"),
+            success_url: "".concat(req.protocol, "://").concat(req.get('host'), "/?tour=").concat(req.params.tourId, "&user=").concat(req.user.id, "&price=").concat(tour.price),
             cancel_url: "".concat(req.protocol, "://").concat(req.get('host'), "/tour/").concat(tour.slug),
             customer_email: req.user.email,
             client_reference_id: req.params.tourID,
@@ -53,6 +55,40 @@ exports.getCheckoutSession = catchAsync(function _callee(req, res, next) {
         case 7:
         case "end":
           return _context.stop();
+      }
+    }
+  });
+});
+exports.createBookingCheckout = catchAsync(function _callee2(req, res, next) {
+  var _req$query, tour, user, price;
+
+  return regeneratorRuntime.async(function _callee2$(_context2) {
+    while (1) {
+      switch (_context2.prev = _context2.next) {
+        case 0:
+          _req$query = req.query, tour = _req$query.tour, user = _req$query.user, price = _req$query.price;
+
+          if (!(!tour && !user && !price)) {
+            _context2.next = 3;
+            break;
+          }
+
+          return _context2.abrupt("return", next());
+
+        case 3:
+          _context2.next = 5;
+          return regeneratorRuntime.awrap(Booking.create({
+            tour: tour,
+            user: user,
+            price: price
+          }));
+
+        case 5:
+          res.redirect(req.originalUrl.split('?')[0]);
+
+        case 6:
+        case "end":
+          return _context2.stop();
       }
     }
   });
